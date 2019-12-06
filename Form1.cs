@@ -15,10 +15,21 @@ namespace CarsDatabase
     public partial class frmCars : Form
 
     {
+        public void showmyData(int recordPositionDisplay)
+        {
+            vehRegNoBox.Text = dt.Rows[recordPositionDisplay]["VehicleRegNo"].ToString();
+            makeBox.Text = dt.Rows[recordPositionDisplay]["Make"].ToString();
+            engineBox.Text = dt.Rows[recordPositionDisplay]["EngineSize"].ToString();
+            dateRgBox.Text = dt.Rows[recordPositionDisplay]["DateRegistered"].ToString();
+            rentPerDayBox.Text = dt.Rows[recordPositionDisplay]["RentalPerDay"].ToString();
+        }
 
-        static string mydataSource="Data Source=C:\\Users\\Client 0819\\Dropbox\\CarsDatabase\\hire.db";
+        static string mydataSource = "Data Source=C:\\Users\\Client 0819\\Documents\\1Assigment2\\CarsDatabase\\hire.db";
         public SQLiteConnection conn = new SQLiteConnection(mydataSource);
 
+        DataTable dt = new DataTable();
+        int totalRecords = 0;
+        int recordCounter = 0;
 
         public frmCars()
         {
@@ -38,13 +49,12 @@ namespace CarsDatabase
         private void frmCars_Load(object sender, EventArgs e)
         {
 
-
             string mySQL = $@"SELECT * 
                             FROM tblCar 
                             ORDER by VehicleRegNo";
             conn.Open();
             SQLiteDataAdapter Da = new SQLiteDataAdapter(mySQL, conn);
-            DataTable dt = new DataTable();
+            
             Da.Fill(dt);
             Da.Dispose();
             conn.Close();
@@ -68,17 +78,19 @@ namespace CarsDatabase
                 break;
             }
 
-    }
+            totalRecords = dt.Rows.Count;
+            boxCounter.Text = (recordCounter + 1) + " OF " + totalRecords;
+        }
         private void btnAddItem_Click(object sender, EventArgs e)
         {
 
             string mySQL = $@"INSERT INTO tblCar ('VehicleRegNo','Make','EngineSize', 'DateRegistered','RentalPerDay', 'Available') VALUES 
                     ('{vehRegNoBox.Text}',
-                     '{makeBox.Text}',
-                     '{engineBox.Text}',
-                     '{dateRgBox.Text}',
-                     '{rentPerDayBox.Text}',
-                     '{availCheckBox.Checked}');";
+                    '{makeBox.Text}',
+                    '{engineBox.Text}',
+                    '{dateRgBox.Text}',
+                    '{rentPerDayBox.Text}',
+                    '{availCheckBox.Checked}');";
 
 
             rtb.Text = mySQL;
@@ -92,18 +104,90 @@ namespace CarsDatabase
         private void btnDelete_Click(object sender, EventArgs e)
         {
             string mySQL = $@"DELETE
-                            FROM tblCar
-                            WHERE('VehicleRegNo') VALUES (
-                            '{vehRegNoBox.Text}'
-                        );";
+                           FROM tblCar
+                           WHERE VehicleRegNo = 
+                          '{vehRegNoBox.Text}'";
 
             rtb.Text = mySQL;
-                conn.Open();
-                SQLiteCommand sQLCmd = new SQLiteCommand(mySQL, conn);
-                sQLCmd.ExecuteNonQuery();
-                conn.Close();
+            conn.Open();
+            SQLiteCommand sQLCmd = new SQLiteCommand(mySQL, conn);
+            sQLCmd.ExecuteNonQuery();
+            conn.Close();
 
         }
-    }
-}
 
+        private void btnUpdate_Click(object sender, EventArgs e)
+        {
+            int checkBoxAvailable = 0;
+
+            if (availCheckBox.Checked)
+            {
+                checkBoxAvailable = 1;
+            }
+
+
+            string mySQL = $@"UPDATE
+                           tblCar
+                           SET 
+                                Make = '{makeBox.Text}',
+                                EngineSize = '{engineBox.Text}',
+                                DateRegistered = '{dateRgBox.Text}',
+                                RentalPerDay = '{rentPerDayBox.Text}',
+                                Available = '{checkBoxAvailable}'
+                           WHERE VehicleRegNo = '{vehRegNoBox.Text}' ";
+
+            rtb.Text = mySQL;
+            conn.Open();
+            SQLiteCommand sQLCmd = new SQLiteCommand(mySQL, conn);
+            sQLCmd.ExecuteNonQuery();
+            conn.Close();
+        }
+
+
+        // Open the search window form
+        private void btnSearch_Click(object sender, EventArgs e)
+        {
+
+
+            taskAsearch newForm = new taskAsearch();
+            newForm.Show();
+
+        }
+
+       
+
+        private void btnNext_Click(object sender, EventArgs e)
+        {
+           if (recordCounter < (totalRecords - 1)) { 
+               recordCounter ++;
+               boxCounter.Text = (recordCounter + 1) + " OF " + totalRecords;
+
+                showmyData(recordCounter);
+          }
+        }
+
+        private void btnFirst_Click(object sender, EventArgs e)
+        {
+            recordCounter = 0;
+            boxCounter.Text = (recordCounter + 1) + " OF " + totalRecords;
+
+            showmyData(recordCounter);
+        }
+
+        private void btnLast_Click(object sender, EventArgs e)
+        {
+            recordCounter = totalRecords - 1;
+            boxCounter.Text = (recordCounter + 1) + " OF " + totalRecords;
+
+            showmyData(recordCounter);
+        }
+
+        private void btnExit_Click(object sender, EventArgs e)
+        {   
+            conn.Close();
+            Application.Exit();
+  
+        }
+    }
+    
+}
